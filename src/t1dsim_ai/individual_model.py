@@ -690,18 +690,26 @@ class SequenceSelection:
 
 
 class DigitalTwin:
-    def __init__(self, n_digitalTwin=0, device=torch.device("cpu"), ts=5):
+    def __init__(self, n_digitalTwin=0, custom_DT = None,device=torch.device("cpu"), ts=5):
         self.ts = ts
         self.device = device
 
-        self.n_digitalTwin = n_digitalTwin
-        digitalTwin_list = [
-            f.path
-            for f in os.scandir(Path(__file__).parent / "models/IndividualModel/")
-            if f.is_dir()
-        ]
-        digitalTwin_list.sort()
-        self.digital_twin_folder = digitalTwin_list[self.n_digitalTwin]
+        if custom_DT is None:
+            self.n_digitalTwin = n_digitalTwin
+
+            digitalTwin_list = [
+                f.path
+                for f in os.scandir(Path(__file__).parent / "models/IndividualModel/")
+                if f.is_dir()
+            ]
+            digitalTwin_list.sort()
+            self.digital_twin_folder = digitalTwin_list[self.n_digitalTwin]
+        else:
+            self.digital_twin_folder  = [
+                f.path
+                for f in os.scandir(custom_DT)
+                if f.is_dir()
+            ]
 
         self.setup_simulator()
 
