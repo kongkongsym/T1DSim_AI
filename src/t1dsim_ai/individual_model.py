@@ -705,11 +705,8 @@ class DigitalTwin:
             digitalTwin_list.sort()
             self.digital_twin_folder = digitalTwin_list[self.n_digitalTwin]
         else:
-            self.digital_twin_folder  = [
-                f.path
-                for f in os.scandir(custom_DT)
-                if f.is_dir()
-            ]
+            self.n_digitalTwin = 99
+            self.digital_twin_folder  = custom_DT
 
         self.setup_simulator()
 
