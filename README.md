@@ -12,7 +12,7 @@ This repository contains a framework to create  physiologically-constrained neur
 
 This framework provides a new tool for individualized  in-silico pre-clinical testing of new technologies and  treatment strategies for T1D management.
 
-Read More: [TODO: Add paper](https://github.com/mosqueralopez/T1DSim_AI)
+Read More: [Pre-print](https://www.arxiv.org/pdf/2508.05705)
 
 ![framework](example/img/figure_DigitalTwinOverview.jpg)
 
