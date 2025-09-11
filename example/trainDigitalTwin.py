@@ -70,12 +70,14 @@ def trainModel(
                 NNIndividual.u_pop_train,
                 NNIndividual.y_id_train,
                 NNIndividual.u_ind_train,
+                NNIndividual.cgm_real_train,
             ],
             "test": [
                 NNIndividual.x_est_test,
                 NNIndividual.u_pop_test,
                 NNIndividual.y_id_test,
                 NNIndividual.u_ind_test,
+                NNIndividual.cgm_real_test,
             ],
         }
 
@@ -195,6 +197,7 @@ def trainModel(
 if __name__ == "__main__":
     # Architecture individual models
     n_neurons = 128
+
     hidden_compartments = {
         "models": [5 + len(input_ind), n_neurons, n_neurons // 2, n_neurons // 4, 1]
     }

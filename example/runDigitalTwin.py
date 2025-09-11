@@ -1,13 +1,13 @@
 import pandas as pd
 
 from t1dsim_ai.individual_model import DigitalTwin
-
+from t1dsim_ai.utils import metrics
 import numpy as np
 import matplotlib.pyplot as plt
 
 df_simulation = pd.read_csv("example_model/data_example.csv")
 df_simulation = df_simulation[~df_simulation.is_train]
-myDigitalTwin = DigitalTwin(n_digitalTwin=0)
+myDigitalTwin = DigitalTwin(custom_DT='/Users/roquemev/Library/CloudStorage/OneDrive-OregonHealth&ScienceUniversity/Documents/OHSU/Tools/T1DSim_AI/example/example_model/DT_Example/')
 df_simulation = myDigitalTwin.simulate(df_simulation.iloc[1 * 12 * 24 : 2 * 12 * 24])
 
 # Visualization

@@ -4,7 +4,7 @@ import torch
 device = torch.device("cpu")
 
 # Inputs population models
-inputs = ["input_insulin", "input_meal_carbs"]
+inputs = np.array(["input_insulin", "input_meal_carbs"])
 
 # Inputs individual models
 input_ind = [
@@ -91,3 +91,4 @@ n_neurons = 128
 hidden_compartments = {
     "models": [5 + len(input_ind), n_neurons, n_neurons // 2, n_neurons // 4, 1]
 }
+

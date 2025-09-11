@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from t1dsim_ai.utils.preprocess import scaler as scaler_pop
 from t1dsim_ai.utils.preprocess import (
     scaler_inverse,
@@ -118,6 +120,8 @@ class ForwardEulerSimulator(nn.Module):
                 x_step[:, 0] = self.adjust_cgm(x_step[:, 0])
 
         X_sim = torch.stack(X_sim_list, 0)
+
+
         return X_sim
 
 
@@ -231,11 +235,13 @@ class IndividualModel:
             u_ind_test[:, idx_robust]
         )
 
+        self.cgm_real_train = scale_inverse_Q1(np.copy(x_est_train[:, 0]),self.popModelFolder).reshape(-1, sim_time_train, 1)
         self.y_id_train = np.copy(x_est_train[:, 0]).reshape(-1, sim_time_train, 1)
         self.x_est_train = x_est_train.reshape(-1, sim_time_train, len(states))
         self.u_pop_train = u_pop_train.reshape(-1, sim_time_train, len(inputs_pop))
         self.u_ind_train = u_ind_train.reshape(-1, sim_time_train, len(input_ind))
 
+        self.cgm_real_test = scale_inverse_Q1(np.copy(x_est_test[:, 0]),self.popModelFolder).reshape(-1, sim_time_test, 1)
         self.y_id_test = np.copy(x_est_test[:, 0]).reshape(-1, sim_time_test, 1)
         self.x_est_test = x_est_test.reshape(-1, sim_time_test, len(states))
         self.u_pop_test = u_pop_test.reshape(-1, sim_time_test, len(inputs_pop))
@@ -263,7 +269,7 @@ class IndividualModel:
             self.seq_len,
             overlap,
             self.device,
-            [self.x_est_train, self.u_pop_train, self.y_id_train, self.u_ind_train],
+            [self.x_est_train, self.u_pop_train, self.y_id_train, self.u_ind_train,self.cgm_real_train],
         )
 
         # Setup neural model structure
@@ -404,7 +410,7 @@ class IndividualModel:
             )
 
         return LOSS_TRAIN[-1]
-
+    #"""
     def loss(self, y_pred, y_true):
         err_fit = y_pred[1:, :] - y_true[1:, :]
         err_df = torch.diff(y_pred, axis=0) - torch.diff(y_true, axis=0)
@@ -426,7 +432,12 @@ class IndividualModel:
         MSE_Dcgm = torch.mean((err_df) ** 2)
 
         return MSE_cgm + 10 * MSE_Dcgm
-
+    """
+    def loss(self, y_pred, y_true):
+        err_fit = y_pred[1:, :] - y_true[1:, :]
+        MSE_cgm = torch.mean(((err_fit) ** 2))
+        return MSE_cgm
+    """
 
 class Batch:
     def __init__(self, batch_size, seq_len, overlap, device, data):
@@ -437,7 +448,7 @@ class Batch:
         self.device = device
 
         # Reshape
-        x_est, u_fit, y_fit, u_fit_ind = data
+        x_est, u_fit, y_fit, u_fit_ind, cgm_real = data
         self.x_est = np.array(
             [
                 frame(
@@ -473,13 +484,22 @@ class Batch:
                 for i in range(len(u_fit_ind))
             ]
         ).reshape(-1, seq_len, u_fit_ind.shape[2])
+        self.cgm_real = np.array(
+            [
+                frame(
+                    cgm_real[i], frame_length=self.seq_len, hop_length=self.overlap, axis=0
+                )
+                for i in range(len(cgm_real))
+            ]
+        ).reshape(-1, seq_len, cgm_real.shape[2])
 
         idx_scenarios = self.filter_seq()  # Filter out sequences
 
         # Define initial states
         for scenario in idx_scenarios:
-            cgm_target = self.y_fit[scenario, 0, 0].item()
+            cgm_target = self.cgm_real[scenario, 0, 0].item()
             self.x_est[scenario, 0, :] = getInitSSFromFile(cgm_target)
+
 
         self.idx_scenarios_temp = idx_scenarios
         self.idx_scenarios = idx_scenarios
@@ -616,14 +636,14 @@ class SequenceSelection:
         idx_scenarios = self.get_sequences(data)  # Filter out sequences
 
         for scenario in idx_scenarios:
-            cgm_target = self.y_fit[scenario, 0, 0].item()
+            cgm_target = self.cgm_real[scenario, 0, 0].item()
             self.x_est[scenario, 0, :] = getInitSSFromFile(cgm_target)
 
         # Define initial states
         self.idx_scenarios = idx_scenarios
 
     def get_sequences(self, data):
-        x_est, u_fit, y_fit, u_fit_ind = data
+        x_est, u_fit, y_fit, u_fit_ind, cgm_real = data
 
         idx_list = []
         idx = 0
@@ -654,6 +674,7 @@ class SequenceSelection:
         self.u_fit = u_fit[0, batch_idx, :]
         self.y_fit = y_fit[0, batch_idx, :]
         self.u_fit_ind = u_fit_ind[0, batch_idx, :]
+        self.cgm_real = cgm_real[0, batch_idx, :]
 
         return np.arange(len(idx_list))
 
@@ -752,6 +773,7 @@ class DigitalTwin:
 
         df_scenario[states] = df_scenario[states].astype(float)
 
+
         df_scenario.loc[0, states] = dfInitStates.loc[
             df_scenario.loc[0, states[0]].astype("int64"), states
         ]
@@ -829,6 +851,7 @@ def getInitSSFromFile(cgm_target):
         cgm_target = 40
     if cgm_target > 400:
         cgm_target = 400
+
     dfInitStates = pd.read_csv(
         Path(__file__).parent / "models/initSteadyStates.csv"
     ).set_index("initCGM")
