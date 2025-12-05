@@ -421,7 +421,7 @@ class IndividualModel:
             torch.logical_and(
                 y_true[1:, :] <= self.LIM_INFERIOR, y_pred[1:, :] > y_true[1:, :]
             )
-        ] = 6
+        ] = 8.5
         penalty[
             torch.logical_and(
                 y_true[1:, :] >= self.LIM_SUPERIOR, y_pred[1:, :] < y_true[1:, :]
