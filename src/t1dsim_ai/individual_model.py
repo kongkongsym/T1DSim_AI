@@ -372,17 +372,17 @@ class IndividualModel:
 
                 # Early stopping condition
 
-                # if LOSS[-1] < self.best_loss:
-                #    self.best_loss = LOSS[-1]
-                #    self.best_model = self.nn_solution.ss_ind_model.state_dict()
-                #    self.epochs_without_improvement = 0
+                if LOSS[-1] < self.best_loss:
+                   self.best_loss = LOSS[-1]
+                   self.best_model = self.nn_solution.ss_ind_model.state_dict()
+                   self.epochs_without_improvement = 0
 
-                # else:
-                #    self.epochs_without_improvement += 1
+                else:
+                   self.epochs_without_improvement += 1
 
-                # if self.epochs_without_improvement >= self.max_epochs_without_improvement:
-                #    print("Early stopping after {} epochs without improvement.".format(self.epochs_without_improvement))
-                #    break
+                if self.epochs_without_improvement >= 20: # Set patience to 20
+                   print("Early stopping after {} epochs without improvement.".format(self.epochs_without_improvement))
+                   break
 
                 if self.curr_epoch == self.n_epochs:
                     break
