@@ -105,35 +105,65 @@ def reproduce_results(n_epochs=150):
     print("REPRODUCTION RESULTS (Population Statistics)")
     print("="*50)
     
-    # Metrics to summarize (matching Paper Table 3 columns roughly)
-    metrics = {
-        'TIR': 'TIR_test',
-        'TAR': 'TAR_test', 
-        'TBR': 'TBR_test',
-        'RMSE': 'RMSE_AIDT_test'
-    }
+    # Metrics to summarize (matching Paper Table 3 columns)
+    # We will compare Actual vs Population Model (AIPop) vs Digital Twin (AIDT)
+    metrics_config = [
+        {'label': 'TIR',  'act_col': 'TIR_test', 'pop_col': 'TIR_AIPop_test',  'dt_col': 'TIR_AIDT_test'},
+        {'label': 'TAR',  'act_col': 'TAR_test', 'pop_col': 'TAR_AIPop_test',  'dt_col': 'TAR_AIDT_test'},
+        {'label': 'TBR',  'act_col': 'TBR_test', 'pop_col': 'TBR_AIPop_test',  'dt_col': 'TBR_AIDT_test'},
+        {'label': 'RMSE', 'act_col': None,       'pop_col': 'RMSE_AIPop_test', 'dt_col': 'RMSE_AIDT_test'}
+    ]
     
     summary_data = []
     
-    for label, col in metrics.items():
-        if col in all_results.columns:
-            # Force conversion to numeric, coercing errors to NaN
-            all_results[col] = pd.to_numeric(all_results[col], errors='coerce')
+    for metric in metrics_config:
+        row = {'Metric': metric['label']}
+        
+        # Process Actual
+        if metric['act_col'] and metric['act_col'] in all_results.columns:
+            all_results[metric['act_col']] = pd.to_numeric(all_results[metric['act_col']], errors='coerce')
+            mean_act = all_results[metric['act_col']].mean()
+            std_act = all_results[metric['act_col']].std()
+            row['Actual (Mean ± SD)'] = f"{mean_act:.1f} ± {std_act:.1f}"
+        else:
+            row['Actual (Mean ± SD)'] = "-"
+
+        # Process Population Model (AIPop)
+        if metric['pop_col'] in all_results.columns:
+            all_results[metric['pop_col']] = pd.to_numeric(all_results[metric['pop_col']], errors='coerce')
+            mean_pop = all_results[metric['pop_col']].mean()
+            std_pop = all_results[metric['pop_col']].std()
+            row['NN-based Pop (Mean ± SD)'] = f"{mean_pop:.1f} ± {std_pop:.1f}"
+        else:
+            row['NN-based Pop (Mean ± SD)'] = "N/A"
+
+        # Process Digital Twin (AIDT)
+        if metric['dt_col'] in all_results.columns:
+            all_results[metric['dt_col']] = pd.to_numeric(all_results[metric['dt_col']], errors='coerce')
+            mean_dt = all_results[metric['dt_col']].mean()
+            std_dt = all_results[metric['dt_col']].std()
+            row['NN-based DT (Mean ± SD)'] = f"{mean_dt:.1f} ± {std_dt:.1f}"
+        else:
+            row['NN-based DT (Mean ± SD)'] = "N/A"
             
-            mean_val = all_results[col].mean()
-            std_val = all_results[col].std()
-            summary_data.append({
-                'Metric': label,
-                'Mean': mean_val,
-                'SD': std_val,
-                'Formatted': f"{mean_val:.1f} ± {std_val:.1f}"
-            })
+        summary_data.append(row)
     
     df_summary = pd.DataFrame(summary_data)
-    print(df_summary[['Metric', 'Formatted']])
     
+    print("\n" + "="*80)
+    print("REPRODUCTION RESULTS (Comparison with Actual)")
+    print("="*80)
+    print(df_summary[['Metric', 'Actual (Mean ± SD)', 'NN-based Pop (Mean ± SD)', 'NN-based DT (Mean ± SD)']])
+    
+    # Detailed breakdown columns to show
+    detailed_cols = ['subject_id']
+    for m in metrics_config:
+        if m.get('act_col') and m['act_col'] in all_results.columns: detailed_cols.append(m['act_col'])
+        if m['pop_col'] in all_results.columns: detailed_cols.append(m['pop_col'])
+        if m['dt_col'] in all_results.columns: detailed_cols.append(m['dt_col'])
+        
     print("\nDetailed breakdown per subject:")
-    print(all_results[['subject_id'] + list(metrics.values())])
+    print(all_results[detailed_cols])
 
     # Save summary to file
     all_results.to_csv("reproduction_all_subjects_results.csv")
