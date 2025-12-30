@@ -117,6 +117,9 @@ def reproduce_results(n_epochs=150):
     
     for label, col in metrics.items():
         if col in all_results.columns:
+            # Force conversion to numeric, coercing errors to NaN
+            all_results[col] = pd.to_numeric(all_results[col], errors='coerce')
+            
             mean_val = all_results[col].mean()
             std_val = all_results[col].std()
             summary_data.append({
