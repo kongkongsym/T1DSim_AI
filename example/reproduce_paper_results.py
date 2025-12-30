@@ -101,10 +101,6 @@ def reproduce_results(n_epochs=150):
 
     all_results = pd.concat(results_list, ignore_index=True)
     
-    print("\n" + "="*50)
-    print("REPRODUCTION RESULTS (Population Statistics)")
-    print("="*50)
-    
     # Metrics to summarize (matching Paper Table 3 columns)
     # We will compare Actual vs Population Model (AIPop) vs Digital Twin (AIDT)
     metrics_config = [
@@ -150,21 +146,12 @@ def reproduce_results(n_epochs=150):
     
     df_summary = pd.DataFrame(summary_data)
     
-    print("\n" + "="*80)
+    print("\n" + "="*100)
     print("REPRODUCTION RESULTS (Comparison with Actual)")
-    print("="*80)
+    print("="*100)
+    # Explicitly select and order columns
     print(df_summary[['Metric', 'Actual (Mean ± SD)', 'NN-based Pop (Mean ± SD)', 'NN-based DT (Mean ± SD)']])
     
-    # Detailed breakdown columns to show
-    detailed_cols = ['subject_id']
-    for m in metrics_config:
-        if m.get('act_col') and m['act_col'] in all_results.columns: detailed_cols.append(m['act_col'])
-        if m['pop_col'] in all_results.columns: detailed_cols.append(m['pop_col'])
-        if m['dt_col'] in all_results.columns: detailed_cols.append(m['dt_col'])
-        
-    print("\nDetailed breakdown per subject:")
-    print(all_results[detailed_cols])
-
     # Save summary to file
     all_results.to_csv("reproduction_all_subjects_results.csv")
     df_summary.to_csv("reproduction_summary_table.csv")
