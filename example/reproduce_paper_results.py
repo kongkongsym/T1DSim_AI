@@ -47,6 +47,28 @@ def reproduce_results(n_epochs=150):
         # Load data
         df_data_subj = pd.read_csv(csv_file)
         
+        # --- Preprocessing: Rename columns to match trainDigitalTwin expectation ---
+        # The T1DEXI data has different column names than the example data.
+        # We need to map them:
+        # 'carbs' -> 'input_meal_carbs'
+        # 'cgm' -> 'output_cgm'
+        if 'input_meal_carbs' not in df_data_subj.columns:
+            if 'carbs' in df_data_subj.columns:
+                df_data_subj.rename(columns={'carbs': 'input_meal_carbs'}, inplace=True)
+            else:
+                print(f"Warning: neither 'input_meal_carbs' nor 'carbs' found for {subj_id}")
+                
+        if 'output_cgm' not in df_data_subj.columns:
+            if 'cgm' in df_data_subj.columns:
+                df_data_subj.rename(columns={'cgm': 'output_cgm'}, inplace=True)
+            else:
+                print(f"Warning: neither 'output_cgm' nor 'cgm' found for {subj_id}")
+        
+        # Fill NaN in input_meal_carbs with 0 (T1DEXI data might have NaNs for no meal)
+        if 'input_meal_carbs' in df_data_subj.columns:
+            df_data_subj['input_meal_carbs'] = df_data_subj['input_meal_carbs'].fillna(0)
+        # --------------------------------------------------------------------------
+
         # Train model
         # Note: personalization_path should be the parent dir where the subj folder is
         # trainModel saves results into personalization_path/subj_id/info.csv
