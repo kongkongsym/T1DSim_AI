@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 
 df_simulation = pd.read_csv("example_model/data_example.csv")
 df_simulation = df_simulation[~df_simulation.is_train]
-myDigitalTwin = DigitalTwin(custom_DT='/Users/roquemev/Library/CloudStorage/OneDrive-OregonHealth&ScienceUniversity/Documents/OHSU/Tools/T1DSim_AI/example/example_model/DT_Example/')
+# 将绝对路径改为相对路径
+myDigitalTwin = DigitalTwin(custom_DT='./example_model/DT_Example/')
 df_simulation = myDigitalTwin.simulate(df_simulation.iloc[1 * 12 * 24 : 2 * 12 * 24])
 
 # Visualization
